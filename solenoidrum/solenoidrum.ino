@@ -4,10 +4,14 @@
 ****************************************************/
 #include <FastLED.h>
 
+// オートの切り替え
+#define AUTOBTN_PIN 30
 #define STARTRECBTN_PIN 32
 
 #define MAIN_LED_NUM 4
 #define SOLENOID_LED_NUM 4
+
+bool isManualMode = false;
 
 //本体
 constexpr int MainLEDPins[] = {36, 37, 38, 39};
@@ -19,7 +23,8 @@ constexpr int SolenoidLEDPins[] = {40, 41, 42, 43};
 #define COLOR_ORDER GRB
 
 int brightness = 0;
-int brightnessStep = 1;
+int brightnessStep = 4;
+int ledBrightNum = 4;
 
 CRGB leds[MAIN_LED_NUM];
 CRGB leds2[MAIN_LED_NUM];
@@ -73,6 +78,7 @@ void setup()
     pinMode(rhythmbtns[i], INPUT_PULLUP);
   }
   pinMode(STARTRECBTN_PIN, INPUT_PULLUP);
+  pinMode(AUTOBTN_PIN, INPUT_PULLUP);
 
   FastLED.addLeds<LED_TYPE, MainLEDPins[0], COLOR_ORDER>(mainLEDs[0], MAIN_LED_NUM).setCorrection(TypicalLEDStrip);
   FastLED.addLeds<LED_TYPE, MainLEDPins[1], COLOR_ORDER>(mainLEDs[1], MAIN_LED_NUM).setCorrection(TypicalLEDStrip);
@@ -124,8 +130,10 @@ void loop()
     delay(playWaitTime);
   }
 
-  // 記録中
-  if (isRec) {
+  // マニュアルモード
+  if (digitalRead(AUTOBTN_PIN) == LOW) {
+    isManualMode = true;
+
     for (int i = 0; i < sizeof(rhythmbtns)/sizeof(rhythmbtns[0]); i++) {
       if (digitalRead(rhythmbtns[i]) == LOW) {
         delay(10);
@@ -139,85 +147,132 @@ void loop()
       }
       
       if (rhythmbtnsStates[i] == LOW && rhythmbtnsLastStates[i] == HIGH) {
-        if (timingCounts[i] < timingSampleMaxNum) {
-          timing[i][timingCounts[i]] = millis() - recStartTime;
-          // Serial.println(timing[i][timingCounts[i]]);
-          Serial.println(rhythmbtns[i]);
-          timingCounts[i]++;
-          Serial.println(timingCounts[i]);
-          digitalWrite(Solenoids[i], HIGH);
-          delay(15);
-          digitalWrite(Solenoids[i], LOW);
-        }
+        digitalWrite(Solenoids[i], HIGH);
+        delay(15);
+        digitalWrite(Solenoids[i], LOW);
       }
       rhythmbtnsLastStates[i] = rhythmbtnsStates[i];
     }
   }
-
-  // 再生中
-  if (isStart) {
-    for (int i = 0; i < solenoidNum; i++) {
-      unsigned long currentPlayTime = millis() - startTime;
-      unsigned long nextTiming = timing[i][timingCounts[i]];
-      
-      if (nextTiming != 0 && nextTiming <= currentPlayTime) {
-        Serial.println("Hit");
-        Serial.println(currentPlayTime);
-        digitalWrite(Solenoids[i], HIGH);
-        timingCounts[i]++;
+  else {
+    if (isManualMode) {
+      // 切り替わったときに実行する
+      for (int i = 0; i < sizeof(rhythmbtns)/sizeof(rhythmbtns[0]); i++) {
+        rhythmbtnsStates[i] = 0;
+        rhythmbtnsLastStates[i] = 0;
       }
 
-      // ソレノイドを100ms後にOFFにする処理
-      if (timingCounts[i] > 0) {
-        unsigned long lastHitTime = timing[i][timingCounts[i]-1];
-        unsigned long timeSinceLastHit = currentPlayTime - lastHitTime;
+      isManualMode = false;
+    }
+
+    // 記録中
+    if (isRec) {
+      for (int i = 0; i < sizeof(rhythmbtns)/sizeof(rhythmbtns[0]); i++) {
+        if (digitalRead(rhythmbtns[i]) == LOW) {
+          delay(10);
+          if (digitalRead(rhythmbtns[i]) == LOW) {
+            rhythmbtnsStates[i] = LOW;
+            lastPressBtnTime = millis();
+          }
+        }
+        else {
+          rhythmbtnsStates[i] = HIGH;
+        }
         
-        if (timeSinceLastHit >= 15) {
-          digitalWrite(Solenoids[i], LOW);
+        if (rhythmbtnsStates[i] == LOW && rhythmbtnsLastStates[i] == HIGH) {
+          if (timingCounts[i] < timingSampleMaxNum) {
+            timing[i][timingCounts[i]] = millis() - recStartTime;
+            // Serial.println(timing[i][timingCounts[i]]);
+            Serial.println(rhythmbtns[i]);
+            timingCounts[i]++;
+            Serial.println(timingCounts[i]);
+            digitalWrite(Solenoids[i], HIGH);
+            delay(15);
+            digitalWrite(Solenoids[i], LOW);
+          }
         }
+        rhythmbtnsLastStates[i] = rhythmbtnsStates[i];
       }
     }
 
-    int zeroCount = 0;
-    for (int i = 0; i < solenoidNum; i++) {
-      if (timing[i][timingCounts[i]] == 0) {
-        zeroCount++;
-      }
-    }
-    if (zeroCount == solenoidNum) {
-      if (!isWaiting) {
-        waitStartTime = millis();
-        isWaiting = true;
-
-      } else if (millis() - waitStartTime >= playWaitTime) {
-        for (int i = 0; i < solenoidNum; i++) {
-          timingCounts[i] = 0;
-          // delay(15);
-          digitalWrite(Solenoids[i], LOW);
+    // 再生中
+    if (isStart) {
+      for (int i = 0; i < solenoidNum; i++) {
+        unsigned long currentPlayTime = millis() - startTime;
+        unsigned long nextTiming = timing[i][timingCounts[i]];
+        
+        if (nextTiming != 0 && nextTiming <= currentPlayTime) {
+          Serial.println("Hit");
+          Serial.println(currentPlayTime);
+          digitalWrite(Solenoids[i], HIGH);
+          timingCounts[i]++;
         }
-        startTime = millis();
-        isWaiting = false;
+
+        // ソレノイドを100ms後にOFFにする処理
+        if (timingCounts[i] > 0) {
+          unsigned long lastHitTime = timing[i][timingCounts[i]-1];
+          unsigned long timeSinceLastHit = currentPlayTime - lastHitTime;
+          
+          if (timeSinceLastHit >= 15) {
+            digitalWrite(Solenoids[i], LOW);
+          }
+        }
+      }
+
+      int zeroCount = 0;
+      for (int i = 0; i < solenoidNum; i++) {
+        if (timing[i][timingCounts[i]] == 0) {
+          zeroCount++;
+        }
+      }
+      if (zeroCount == solenoidNum) {
+        if (!isWaiting) {
+          waitStartTime = millis();
+          isWaiting = true;
+
+        } else if (millis() - waitStartTime >= playWaitTime) {
+          for (int i = 0; i < solenoidNum; i++) {
+            timingCounts[i] = 0;
+            // delay(15);
+            digitalWrite(Solenoids[i], LOW);
+          }
+          startTime = millis();
+          isWaiting = false;
+        }
       }
     }
   }
-
 
   brightness += brightnessStep;
   if (brightness >= 255 || brightness <= 0)
   {
     brightnessStep *= -1;
+    // 光る個数をランダムにする
+    ledBrightNum = random(0, MAIN_LED_NUM);
+    // すべて消灯する
+    for (int i = 0; i < sizeof(mainLEDs)/sizeof(mainLEDs[0]); i++) {
+      for (int j = 0; j < MAIN_LED_NUM; j++) {
+        mainLEDs[i][j] = CRGB(0, 0, 0);
+      }
+    }
+    for (int i = 0; i < sizeof(solenoidLEDs)/sizeof(solenoidLEDs[0]); i++) {
+      for (int j = 0; j < SOLENOID_LED_NUM; j++) {
+        solenoidLEDs[i][j] = CRGB(0, 0, 0);
+      }
+    }
   }
   uint8_t r, g, b;
   HSVtoRGB(240, 1, brightness / 255.0, r, g, b);
 
   // 本体用
   for (int i = 0; i < sizeof(mainLEDs)/sizeof(mainLEDs[0]); i++) {
-    for (int j = 0; j < MAIN_LED_NUM; j++) {
+    for (int j = 0; j < random(0, ledBrightNum); j++) {
       mainLEDs[i][j] = CRGB(r, g, b);
     }
   }
+  // ソレノイド用
   for (int i = 0; i < sizeof(solenoidLEDs)/sizeof(solenoidLEDs[0]); i++) {
-    for (int j = 0; j < SOLENOID_LED_NUM; j++) {
+    for (int j = 0; j < random(0, ledBrightNum); j++) {
       solenoidLEDs[i][j] = CRGB(r, g, b);
     }
   }
@@ -225,7 +280,11 @@ void loop()
   
 }
 
-// HSV値をRGB値に変換する関数
+/*
+--------------------------------------------------
+HSV値をRGB値に変換する関数
+--------------------------------------------------
+*/
 void HSVtoRGB(float h, float s, float v, uint8_t &r, uint8_t &g, uint8_t &b) {
   float c = v * s;
   float x = c * (1 - abs(fmod(h / 60.0, 2) - 1));
