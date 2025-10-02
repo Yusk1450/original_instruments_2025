@@ -97,7 +97,7 @@ void setup()
 void loop()
 {
   // 記録モード
-  if (digitalRead(STARTRECBTN_PIN) == LOW && !isRec) {
+  if (digitalRead(STARTRECBTN_PIN) == HIGH && !isRec) {
     recStartTime = millis();
     for (int i = 0; i < solenoidNum; i++) {
       for (int j = 0; j < timingSampleMaxNum; j++) {
@@ -112,7 +112,7 @@ void loop()
     Serial.println("REC start");
   }
   // 再生モード
-  else if (digitalRead(STARTRECBTN_PIN) == HIGH && !isStart) {
+  else if (digitalRead(STARTRECBTN_PIN) == LOW && !isStart) {
     for (int i = 0; i < solenoidNum; i++) {
       for (int j = 0; j < timingSampleMaxNum; j++) {
         Serial.print(String(timing[i][j])+",");
@@ -248,31 +248,43 @@ void loop()
   {
     brightnessStep *= -1;
     // 光る個数をランダムにする
-    ledBrightNum = random(0, MAIN_LED_NUM);
+    // ledBrightNum = random(0, MAIN_LED_NUM);
+    ledBrightNum = random(1, MAIN_LED_NUM + 1);
     // すべて消灯する
-    for (int i = 0; i < sizeof(mainLEDs)/sizeof(mainLEDs[0]); i++) {
-      for (int j = 0; j < MAIN_LED_NUM; j++) {
-        mainLEDs[i][j] = CRGB(0, 0, 0);
-      }
-    }
-    for (int i = 0; i < sizeof(solenoidLEDs)/sizeof(solenoidLEDs[0]); i++) {
-      for (int j = 0; j < SOLENOID_LED_NUM; j++) {
-        solenoidLEDs[i][j] = CRGB(0, 0, 0);
-      }
-    }
+    // for (int i = 0; i < sizeof(mainLEDs)/sizeof(mainLEDs[0]); i++) {
+    //   for (int j = 0; j < MAIN_LED_NUM; j++) {
+    //     mainLEDs[i][j] = CRGB(0, 0, 0);
+    //   }
+    // }
+    // for (int i = 0; i < sizeof(solenoidLEDs)/sizeof(solenoidLEDs[0]); i++) {
+    //   for (int j = 0; j < SOLENOID_LED_NUM; j++) {
+    //     solenoidLEDs[i][j] = CRGB(0, 0, 0);
+    //   }
+    // }
   }
   uint8_t r, g, b;
   HSVtoRGB(240, 1, brightness / 255.0, r, g, b);
 
   // 本体用
+  // for (int i = 0; i < sizeof(mainLEDs)/sizeof(mainLEDs[0]); i++) {
+  //   for (int j = 0; j < random(0, ledBrightNum); j++) {
+  //     mainLEDs[i][j] = CRGB(r, g, b);
+  //   }
+  // }
+
   for (int i = 0; i < sizeof(mainLEDs)/sizeof(mainLEDs[0]); i++) {
-    for (int j = 0; j < random(0, ledBrightNum); j++) {
+    for (int j = 0; j < ledBrightNum; j++) {
       mainLEDs[i][j] = CRGB(r, g, b);
     }
   }
   // ソレノイド用
+  // for (int i = 0; i < sizeof(solenoidLEDs)/sizeof(solenoidLEDs[0]); i++) {
+  //   for (int j = 0; j < random(0, ledBrightNum); j++) {
+  //     solenoidLEDs[i][j] = CRGB(r, g, b);
+  //   }
+  // }
   for (int i = 0; i < sizeof(solenoidLEDs)/sizeof(solenoidLEDs[0]); i++) {
-    for (int j = 0; j < random(0, ledBrightNum); j++) {
+    for (int j = 0; j < ledBrightNum; j++) {
       solenoidLEDs[i][j] = CRGB(r, g, b);
     }
   }
