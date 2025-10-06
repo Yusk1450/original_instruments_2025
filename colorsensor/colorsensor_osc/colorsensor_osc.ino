@@ -49,7 +49,18 @@ Color colorTable[] =
   {71, 106, 83, 21},
   {114, 64, 89, 22},
   {32, 96, 138, 23},
-  {45, 111, 108, 24}
+  {45, 111, 108, 24},
+  {103, 93, 64, 25},
+  {25, 82, 160, 26},
+  {53, 92, 118, 28},
+  {74, 79, 110, 29},
+  {44, 91, 130, 30},
+  {50, 100, 113, 31},
+  {67, 110, 81, 32},
+  {50, 83, 131, 33},
+  {56, 95, 114, 35},
+  {53, 85, 125, 36}
+
 };
 
 int note;
@@ -111,6 +122,7 @@ int twoButtonStateFlag = 0;
 void setup()
 {
   Serial.begin(115200);
+  Serial.print("ok");
 
   #ifdef ESP_PLATFORM
     WiFi.disconnect(true, true);  // disable wifi, erase ap info
@@ -290,6 +302,7 @@ void loop()
 
       // Serial.println("ON");
       note = colorTable[index].note;
+      // note += 44;
       OscWiFi.send(oscHost, oscPort, "/note", note);
 
       button1Flag = 1;
@@ -318,6 +331,7 @@ void loop()
       // Serial.println("========================");
 
       note2 = colorTable[index2].note;
+      // note2 += 44;
       OscWiFi.send(oscHost, oscPort, "/note", note2);
 
       button2Flag = 1;
