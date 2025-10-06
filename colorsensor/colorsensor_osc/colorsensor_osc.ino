@@ -26,42 +26,43 @@ struct Color {
 
 Color colorTable[] =
 {
-  {86, 75, 103, 1},
-  {70, 119, 69, 2},   
-  {126, 65, 80, 3},   
-  {107, 87, 67, 4}, 
-  {93, 107, 54, 5}, 
-  {37, 80, 148, 6}, 
-  {46, 98, 120, 7}, 
-  {57, 87, 119, 8},
-  {45, 111, 109, 9},
-  {115, 73, 79, 10},
-  {43, 95, 125, 11},
-  {78, 72, 115, 12},
-  {25, 88, 154, 13},
-  {80, 89, 93, 14},
-  {56, 121, 83, 15}, 
-  {35, 96, 134, 16}, 
-  {69, 73, 123, 17}, 
-  {71, 109, 79, 18}, 
-  {33, 106, 128, 19},
-  {29, 91, 146, 20},
-  {71, 106, 83, 21},
-  {114, 64, 89, 22},
-  {32, 96, 138, 23},
-  {45, 111, 108, 24},
-  {103, 93, 64, 25},
-  {25, 82, 160, 26},
-  {53, 92, 118, 28},
-  {74, 79, 110, 29},
-  {44, 91, 130, 30},
-  {50, 100, 113, 31},
-  {67, 110, 81, 32},
-  {50, 83, 131, 33},
-  {56, 95, 114, 35},
-  {53, 85, 125, 36}
+  // {86, 75, 103, 1},
+  {114, 64, 89, 44},
+  {126, 65, 80, 45},
+  {115, 73, 79, 49},
+  {107, 87, 67, 50},
+  {103, 93, 64, 51},
+  {93, 107, 54, 52}, 
+  {67, 110, 81, 53},
+  {71, 106, 83, 54},
+  {71, 109, 79, 55}, 
+  {70, 119, 69, 56}, 
+  {56, 121, 83, 57},
+  {45, 111, 109, 58},
+  {45, 111, 108, 59},
+  {56, 95, 114, 60},
+  {46, 98, 120, 61},
+  {33, 106, 128, 62},
+  {50, 100, 113, 63},
+  {43, 95, 125, 64},
+  {35, 96, 134, 65}, 
+  {32, 96, 138, 66},
+  {25, 88, 154, 67},
+  {29, 91, 146, 68},
+  {25, 82, 160, 69},
+  {44, 91, 130, 70},
+  {53, 92, 118, 71},
+  {37, 80, 148, 72},
+  {78, 72, 115, 73},
+  {69, 73, 123, 75}, 
+  {57, 87, 119, 76},
+  {50, 83, 131, 77},
+  {53, 85, 125, 78},
+  {80, 89, 93, 80},
+  {74, 79, 110, 82}
 
 };
+
 
 int note;
 int note2;
@@ -122,7 +123,6 @@ int twoButtonStateFlag = 0;
 void setup()
 {
   Serial.begin(115200);
-  Serial.print("ok");
 
   #ifdef ESP_PLATFORM
     WiFi.disconnect(true, true);  // disable wifi, erase ap info
@@ -180,14 +180,14 @@ void loop()
 {
   button1State = digitalRead(switchPin); // 現状のボタンの状態を記録
   button2State = digitalRead(switchPin2); // 現状のボタンの状態を記録
-  Serial.println(button1State);
+  // Serial.println(button1State);
 
   if (WiFi.status() != WL_CONNECTED && millis() - wifiMillis >= 1000)
   {
     WiFi.disconnect();
     WiFi.reconnect();
     wifiMillis = millis();
-    Serial.println("reconnect");
+    // Serial.println("reconnect");
     wifiReconnectCount++;
 
     if (wifiReconnectCount > 10)
@@ -261,7 +261,7 @@ void loop()
   if (bestDist < 4000) { // 誤差許容(数字を小さくすれば誤差は小さくなる)
     // Serial.printf("Matched Note %d\n", colorTable[index].note);
   } else {
-    Serial.println("No match");
+    // Serial.println("No match");
   }
 
 
@@ -289,20 +289,19 @@ void loop()
   if (bestDist2 < 4000) { // 誤差許容(数字を小さくすれば誤差は小さくなる)
     // Serial.printf("Matched Note %d\n", colorTable[index2].note);
   } else {
-    Serial.println("No match");
+    // Serial.println("No match");
   }
 
   if (button1State == LOW)
   {
     if(button1Flag == 0)
     {
-      Serial.println("スイッチ1押されました");
-      Serial.printf("Normalized R: %.0f  G: %.0f  B: %.0f\n", r, g, b);
-      Serial.printf("Matched Note %d\n", colorTable[index].note);
+      // Serial.println("スイッチ1押されました");
+      // Serial.printf("Normalized R: %.0f  G: %.0f  B: %.0f\n", r, g, b);
+      // Serial.printf("Matched Note %d\n", colorTable[index].note);
 
       // Serial.println("ON");
       note = colorTable[index].note;
-      // note += 44;
       OscWiFi.send(oscHost, oscPort, "/note", note);
 
       button1Flag = 1;
@@ -315,23 +314,22 @@ void loop()
       OscWiFi.send(oscHost, oscPort, "/off", note);
     }
     button1Flag = 0;
-    Serial.println("音を切りました");
+    // Serial.println("音を切りました");
   }
 
   if (button2State == LOW)
   {
     if(button2Flag == 0)
     {
-      Serial.println("スイッチ2押されました");
-      Serial.printf("Matched Note %d\n", colorTable[index2].note);
+      // Serial.println("スイッチ2押されました");
+      // Serial.printf("Matched Note %d\n", colorTable[index2].note);
       // Serial.println("===== Color Data2 =====");
       // Serial.printf("Clear: %d  R: %d  G: %d  B: %d\n", clear2, red2, green2, blue2);
-      Serial.printf("Normalized R: %.0f  G: %.0f  B: %.0f\n", r2, g2, b2);
+      // Serial.printf("Normalized R: %.0f  G: %.0f  B: %.0f\n", r2, g2, b2);
       // Serial.printf("16bit Color: 0x%04X\n", _color2);
       // Serial.println("========================");
 
       note2 = colorTable[index2].note;
-      // note2 += 44;
       OscWiFi.send(oscHost, oscPort, "/note", note2);
 
       button2Flag = 1;
@@ -343,7 +341,7 @@ void loop()
       OscWiFi.send(oscHost, oscPort, "/off", note2);
     }
     button2Flag = 0;
-    Serial.println("音を切りました");
+    // Serial.println("音を切りました");
   }
-  delay(10);
+  // delay(5);
 }
