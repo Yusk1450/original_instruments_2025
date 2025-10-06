@@ -14,7 +14,6 @@ int val = 0;
 MidiBus myBus;//MidiBusインスタンスを作成
 int midiChannel = 1;//使用するMIDIチャンネル
 int note = -1;
-int currentNote = -1;
 
 int playMode = 1;
  
@@ -23,6 +22,9 @@ void setup() {
  frameRate(25);
  myRemoteLocation = new NetAddress("192.168.0.101", 8000); 
  oscP5 = new OscP5(this,8000); //受信するポートの設定
+ 
+ //myRemoteLocation = new NetAddress("192.168.0.102", 8888); 
+ //oscP5 = new OscP5(this,8000); //受信するポートの設定
  
  MidiBus.list();
  myBus = new MidiBus();
