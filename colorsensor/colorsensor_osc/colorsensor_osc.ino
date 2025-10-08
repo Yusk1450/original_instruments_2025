@@ -185,19 +185,19 @@ void setupColorSensors()
 ----------------------------------------*/
 void loop()
 {
-  if (WiFi.status() != WL_CONNECTED && millis() - wifiMillis >= 1000)
-  {
-    WiFi.disconnect();
-    WiFi.reconnect();
-    wifiMillis = millis();
-    // Serial.println("reconnect");
-    wifiReconnectCount++;
+  // if (WiFi.status() != WL_CONNECTED && millis() - wifiMillis >= 1000)
+  // {
+  //   WiFi.disconnect();
+  //   WiFi.reconnect();
+  //   wifiMillis = millis();
+  //   // Serial.println("reconnect");
+  //   wifiReconnectCount++;
 
-    if (wifiReconnectCount > 10)
-    {
-      ESP.restart();
-    }
-  }
+  //   if (wifiReconnectCount > 10)
+  //   {
+  //     ESP.restart();
+  //   }
+  // }
 
   int button1State = digitalRead(button1Pin);
   int button2State = digitalRead(button2Pin);
@@ -213,25 +213,25 @@ void loop()
   int idx1 = findColor(R, G, B);
   int idx2 = findColor(R2, G2, B2);
 
-  if (digitalRead(button1Pin) == LOW && button1Flag == 0 && idx1 >= 0)
+  if (button1State == LOW && button1Flag == 0 && idx1 >= 0)
   {
     note1 = colorTable[idx1].note;
     OscWiFi.send(oscHost, oscPort, "/note", note1);
     button1Flag = 1;
   } 
-  else if (digitalRead(button1Pin) == HIGH && button1Flag == 1)
+  else if (button1State == HIGH && button1Flag == 1)
   {
     OscWiFi.send(oscHost, oscPort, "/off", note1);
     button1Flag = 0;
   }
 
-  if (digitalRead(button2Pin) == LOW && button2Flag == 0 && idx2 >= 0)
+  if (button2State == LOW && button2Flag == 0 && idx2 >= 0)
   {
     note2 = colorTable[idx2].note;
     OscWiFi.send(oscHost, oscPort, "/note", note2);
     button2Flag = 1;
   } 
-  else if (digitalRead(button2Pin) == HIGH && button2Flag == 1)
+  else if (button2State == HIGH && button2Flag == 1)
   {
     OscWiFi.send(oscHost, oscPort, "/off", note2);
     button2Flag = 0;
