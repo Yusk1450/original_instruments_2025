@@ -85,7 +85,7 @@ Color colorTable[] =
 
 };
 
-int note;
+int note1;
 int note2;
 
 int count = sizeof(colorTable) / sizeof(colorTable[0]);
@@ -115,7 +115,9 @@ const int button2Pin = 14;
 int button1Flag = 0;
 int button2Flag = 0;
 
-
+/* ---------------------------------------
+ * 初期化
+----------------------------------------*/
 void setup()
 {
   Serial.begin(115200);
@@ -143,17 +145,25 @@ void setup()
         time = millis();
     }
   }
-  Serial.println("WiFiOK");
-
-  Wire.begin(21, 22); // カラーセンサー1台目のピン
-  Wire1.begin(32, 33); // カラーセンサー2台目のピン
+  wifiMillis = millis();
+  Serial.println("WiFi OK");
 
   pinMode(button1Pin, INPUT_PULLUP);
   pinMode(button2Pin, INPUT_PULLUP);
 
+  setupColorSensors();
+
+  Serial.println("Setup OK.");
+}
+
+void setupColorSensors()
+{
+  Wire.begin(21, 22);         // カラーセンサー1台目のピン
+  Wire1.begin(32, 33);        // カラーセンサー2台目のピン
+
   Serial.println("Color View Test!");
   while (!tcs1.begin())
-  {  // 如果color unit未能初始化
+  {
     Serial.println("No TCS34725 found ... check your connections");
     delay(1000);
   }
@@ -168,10 +178,11 @@ void setup()
 
   tcs2.setIntegrationTime(TCS34725_INTEGRATIONTIME_154MS);
   tcs2.setGain(TCS34725_GAIN_4X);
-
-  Serial.println("Setup OK.");
 }
 
+/* ---------------------------------------
+ * ループ
+----------------------------------------*/
 void loop()
 {
   if (WiFi.status() != WL_CONNECTED && millis() - wifiMillis >= 1000)
@@ -202,44 +213,52 @@ void loop()
   int idx1 = findColor(R, G, B);
   int idx2 = findColor(R2, G2, B2);
 
-  if (digitalRead(button1Pin) == LOW && button1Flag == 0 && idx1 >= 0) {
+  if (digitalRead(button1Pin) == LOW && button1Flag == 0 && idx1 >= 0)
+  {
     note1 = colorTable[idx1].note;
     OscWiFi.send(oscHost, oscPort, "/note", note1);
     button1Flag = 1;
   } 
-  else if (digitalRead(button1Pin) == HIGH && button1Flag == 1) {
+  else if (digitalRead(button1Pin) == HIGH && button1Flag == 1)
+  {
     OscWiFi.send(oscHost, oscPort, "/off", note1);
     button1Flag = 0;
   }
 
-  if (digitalRead(button2Pin) == LOW && button2Flag == 0 && idx2 >= 0) {
+  if (digitalRead(button2Pin) == LOW && button2Flag == 0 && idx2 >= 0)
+  {
     note2 = colorTable[idx2].note;
     OscWiFi.send(oscHost, oscPort, "/note", note2);
     button2Flag = 1;
   } 
-  else if (digitalRead(button2Pin) == HIGH && button2Flag == 1) {
+  else if (digitalRead(button2Pin) == HIGH && button2Flag == 1)
+  {
     OscWiFi.send(oscHost, oscPort, "/off", note2);
     button2Flag = 0;
   }
   // delay(5);
 }
 
-void normalizeColor(uint16_t rRaw, uint16_t gRaw, uint16_t bRaw, uint16_t cRaw, int &R, int &G, int &B) {
+void normalizeColor(uint16_t rRaw, uint16_t gRaw, uint16_t bRaw, uint16_t cRaw, int &R, int &G, int &B)
+{
   if (cRaw == 0) cRaw = 1;
   R = rRaw * 255.0 / cRaw;
   G = gRaw * 255.0 / cRaw;
   B = bRaw * 255.0 / cRaw;
 }
 
-int findColor(int R, int G, int B) {
+int findColor(int R, int G, int B)
+{
   int bestIndex = -1;
   long bestDist = LONG_MAX;
 
-  for (int i = 0; i < COLOR_COUNT; i++) {
+  for (int i = 0; i < count; i++)
+  {
     long dist = sq(R - colorTable[i].r)
               + sq(G - colorTable[i].g)
               + sq(B - colorTable[i].b);
-    if (dist < bestDist) {
+    if (dist < bestDist)
+    {
       bestDist = dist;
       bestIndex = i;
     }
