@@ -19,12 +19,12 @@ int playMode = 1;
  
 void setup() {
  size(400, 400);
- frameRate(25);
- myRemoteLocation = new NetAddress("192.168.0.101", 8000); 
- oscP5 = new OscP5(this,8000); //受信するポートの設定
- 
- //myRemoteLocation = new NetAddress("192.168.0.102", 8888); 
+ frameRate(120);
+ //myRemoteLocation = new NetAddress("192.168.0.101", 8000); 
  //oscP5 = new OscP5(this,8000); //受信するポートの設定
+ 
+ myRemoteLocation = new NetAddress("192.168.0.102", 8888); 
+ oscP5 = new OscP5(this,8888); //受信するポートの設定
  
  MidiBus.list();
  myBus = new MidiBus();
@@ -64,7 +64,7 @@ void keyPressed() {
   if (key == '1') playMode = 1;
   if (key == '2') playMode = 2;
   if (key == '3') playMode = 3;
-  if (key == '4') playMode = 4;
+  //if (key == '4') playMode = 4;
   
   OscMessage msg = new OscMessage("/playMode");
   msg.add(playMode); 

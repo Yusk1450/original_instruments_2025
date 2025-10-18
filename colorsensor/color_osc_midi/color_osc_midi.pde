@@ -19,7 +19,7 @@ int playMode = 1;
  
 void setup() {
  size(400, 400);
- frameRate(25);
+ frameRate(120);
  myRemoteLocation = new NetAddress("192.168.0.103", 4444); 
   //myRemoteLocation = new NetAddress("192.168.0.104", 4000); 
  oscP5 = new OscP5(this,4444); //受信するポートの設定
